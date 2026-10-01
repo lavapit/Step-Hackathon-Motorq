@@ -404,7 +404,7 @@ Make sure you have the following installed:
 
 ### Clone Repository
 
-```bash
+
 git clone https://github.com/lavapit/Step-Hackathon-Motorq.git
 cd Step-Hackathon-Motorq
 
