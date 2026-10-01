@@ -420,7 +420,7 @@ This creates the synthetic fleet dataset, including the 100,000-vehicle registry
 Run Demo
 make demo
 
-🌐 Main Services
+## 🌐 Main Services
 Service	URL
 FleetGuard Web UI	http://localhost:3000
 FastAPI Swagger	http://localhost:8000/docs
@@ -429,7 +429,7 @@ Grafana	http://localhost:3001
 MinIO	http://localhost:9001
 
 
-👥 User Roles
+## 👥 User Roles
 Role	Responsibilities
 Fleet Manager	Monitor vehicles, alerts, risk and approve actions
 Analyst	Investigate vehicle telemetry and risk
@@ -437,7 +437,7 @@ Tenant Admin	Manage audit and privacy workflows
 Viewer	Read-only fleet visibility
 
 
-🧪 Implementation Status
+## 🧪 Implementation Status
 Component	Status
 Fleet Dashboard	✅ Implemented
 100K Vehicle Dataset	✅ Implemented
@@ -459,7 +459,7 @@ Production Authentication	🔜 Planned
 Load Testing	🔜 Planned
 
 
-⚠️ Known Limitations
+## ⚠️ Known Limitations
 FleetGuard AI is a hackathon prototype.
 ML
 The LightGBM training pipeline has not yet been implemented.
@@ -474,7 +474,7 @@ No formal load testing has been performed.
 Therefore, values such as 100K events/sec and <2 sec latency should be treated as architecture targets rather than measured benchmarks.
 Security
 Production controls such as JWT validation, Row-Level Security and rate limiting are still planned.
-🛣️ Roadmap
+## 🛣️ Roadmap
 Phase 1 — Prototype
 - [x] Fleet dashboard
 - [x] 100K synthetic vehicles
@@ -522,7 +522,7 @@ The project combines:
 - Auditability
 - Privacy workflows
 - Multi-tenant architecture
-🎥 Demo
+## 🎥 Demo
 The prototype demonstration covers:
 Time	Feature
 00:00	Fleet overview
@@ -536,7 +536,7 @@ Time	Feature
 
 
 The recorded demonstration is approximately 2 minutes 27 seconds.
-🔮 Future Vision
+## 🔮 Future Vision
 The long-term goal is to turn FleetGuard into a continuously operating predictive-maintenance platform.
 Connected Vehicles → Real-Time Telemetry → Streaming Intelligence → Predictive ML → Failure Similarity → Fleet Copilot → Human Approval → Maintenance Execution → Continuous Learning
 The ultimate goal is to move from:
@@ -545,7 +545,7 @@ The ultimate goal is to move from:
 to:
 "This vehicle shows a combination of thermal, electrical and fault-code patterns similar to vehicles that previously failed. Review this vehicle before the predicted failure window."
 
-📚 Documentation
+## 📚 Documentation
 Additional documentation can be found in:
 - docs/AI_USAGE
 - docs/KNOWN_LIMITATIONS
@@ -555,6 +555,6 @@ Additional documentation can be found in:
 FleetGuard AI is a hackathon prototype and academic project.
 All vehicle, driver and telemetry data used in the prototype is synthetic.
 Production-scale streaming, trained ML prediction, complete security enforcement and performance benchmarking are future implementation goals.
-🔗 Repository
+## 🔗 Repository
  
 FleetGuard AI — Connected Vehicle Intelligence Hackathon
