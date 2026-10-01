@@ -395,6 +395,8 @@ The repository is organized into:
 
 ### Prerequisites
 
+Make sure you have the following installed:
+
 - Git
 - Docker
 - Docker Compose
@@ -420,7 +422,7 @@ This creates the synthetic fleet dataset, including the 100,000-vehicle registry
 Run Demo
 make demo
 
-## 🌐 Main Services
+🌐 Main Services
 Service	URL
 FleetGuard Web UI	http://localhost:3000
 FastAPI Swagger	http://localhost:8000/docs
@@ -429,7 +431,7 @@ Grafana	http://localhost:3001
 MinIO	http://localhost:9001
 
 
-## 👥 User Roles
+👥 User Roles
 Role	Responsibilities
 Fleet Manager	Monitor vehicles, alerts, risk and approve actions
 Analyst	Investigate vehicle telemetry and risk
@@ -437,7 +439,7 @@ Tenant Admin	Manage audit and privacy workflows
 Viewer	Read-only fleet visibility
 
 
-## 🧪 Implementation Status
+🧪 Implementation Status
 Component	Status
 Fleet Dashboard	✅ Implemented
 100K Vehicle Dataset	✅ Implemented
@@ -459,22 +461,24 @@ Production Authentication	🔜 Planned
 Load Testing	🔜 Planned
 
 
-## ⚠️ Known Limitations
+⚠️ Known Limitations
 FleetGuard AI is a hackathon prototype.
-ML
+Machine Learning
 The LightGBM training pipeline has not yet been implemented.
-Risk scores and model-related values are seeded demonstration values.
+Risk scores and model-related values shown in the prototype are seeded demonstration values.
 Streaming
-The target vehicle → gateway → Redpanda → stream processor → ClickHouse pipeline is not yet implemented in the current prototype.
+The target production pipeline:
+Vehicle → Gateway → Redpanda → Stream Processor → ClickHouse
+is part of the planned architecture and is not yet implemented in the current prototype.
 Copilot
-The current copilot is keyword/rule based.
+The current copilot uses a rule/keyword-based implementation.
 A guarded LangGraph + LLM architecture is planned for a future version.
 Performance
-No formal load testing has been performed.
-Therefore, values such as 100K events/sec and <2 sec latency should be treated as architecture targets rather than measured benchmarks.
+Formal load testing has not yet been performed.
+Therefore, values such as 100K events/sec and <2 second latency are architecture targets rather than measured production benchmarks.
 Security
-Production controls such as JWT validation, Row-Level Security and rate limiting are still planned.
-## 🛣️ Roadmap
+Production security controls such as JWT validation, PostgreSQL Row-Level Security and rate limiting are planned for future implementation.
+🛣️ Roadmap
 Phase 1 — Prototype
 - [x] Fleet dashboard
 - [x] 100K synthetic vehicles
@@ -510,7 +514,7 @@ Phase 3 — Production
 - [ ] Helm charts
 - [ ] Terraform
 🏆 Key Innovation
-FleetGuard is designed around the complete fleet-maintenance loop:
+FleetGuard is designed around the complete fleet-maintenance workflow:
 OBSERVE → DETECT → PRIORITIZE → EXPLAIN → RECOMMEND → APPROVE → ACT → AUDIT
 The project combines:
 - Predictive maintenance
@@ -522,7 +526,7 @@ The project combines:
 - Auditability
 - Privacy workflows
 - Multi-tenant architecture
-## 🎥 Demo
+🎥 Demo
 The prototype demonstration covers:
 Time	Feature
 00:00	Fleet overview
@@ -536,17 +540,17 @@ Time	Feature
 
 
 The recorded demonstration is approximately 2 minutes 27 seconds.
-## 🔮 Future Vision
+🔮 Future Vision
 The long-term goal is to turn FleetGuard into a continuously operating predictive-maintenance platform.
 Connected Vehicles → Real-Time Telemetry → Streaming Intelligence → Predictive ML → Failure Similarity → Fleet Copilot → Human Approval → Maintenance Execution → Continuous Learning
-The ultimate goal is to move from:
+The goal is to move from:
 "This vehicle is at risk."
 
 to:
 "This vehicle shows a combination of thermal, electrical and fault-code patterns similar to vehicles that previously failed. Review this vehicle before the predicted failure window."
 
-## 📚 Documentation
-Additional documentation can be found in:
+📚 Documentation
+Additional project documentation can be found in:
 - docs/AI_USAGE
 - docs/KNOWN_LIMITATIONS
 - docs/OPEN_QUESTIONS
@@ -555,6 +559,6 @@ Additional documentation can be found in:
 FleetGuard AI is a hackathon prototype and academic project.
 All vehicle, driver and telemetry data used in the prototype is synthetic.
 Production-scale streaming, trained ML prediction, complete security enforcement and performance benchmarking are future implementation goals.
-## 🔗 Repository
+🔗 Repository
  
 FleetGuard AI — Connected Vehicle Intelligence Hackathon
