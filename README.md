@@ -1,4 +1,4 @@
-🚗 FleetGuard AI
+# 🚗 FleetGuard AI
 
 ### Predictive Maintenance & Fleet Intelligence Platform
 
@@ -76,7 +76,25 @@ FleetGuard AI provides fleet managers with a centralized platform to:
 
 ## 🔄 Product Workflow
 
-**Vehicle Telemetry → Health & Risk Analysis → 7-Day Breakdown Risk → Risk Explanation → Fleet Manager → AI Recommendation → Human Approval → Work Order → Audit Log**
+```text
+Vehicle Telemetry
+      ↓
+Health & Risk Analysis
+      ↓
+7-Day Breakdown Risk
+      ↓
+Risk Explanation
+      ↓
+Fleet Manager
+      ↓
+AI Recommendation
+      ↓
+Human Approval
+      ↓
+Work Order
+      ↓
+Audit Log
+```
 
 ---
 
@@ -84,29 +102,15 @@ FleetGuard AI provides fleet managers with a centralized platform to:
 
 FleetGuard does not allow an AI recommendation to directly perform an operational action.
 
-### Workflow
-
-**AI Recommendation**
-
-↓
-
-**Human Review**
-
-↓
-
-**Approve?**
-
-↙️　　　　　　　　　↘️
-
-**YES**　　　　　　　**NO**
-
-↓
-
-**Work Order**　　　**No Action**
-
-↓
-
-**Audit Log**
+```mermaid
+flowchart TD
+    A[AI Recommendation] --> B[Human Review]
+    B --> C{Approve?}
+    C -- Yes --> D[Work Order]
+    C -- No --> E[No Action]
+    D --> F[Audit Log]
+    E --> F
+```
 
 This keeps the fleet manager in control of maintenance decisions.
 
@@ -116,7 +120,9 @@ This keeps the fleet manager in control of maintenance decisions.
 
 FleetGuard supports a real-time alert workflow using **Server-Sent Events (SSE)**.
 
-**Fault Injection → FastAPI → Alert Created → SSE Event → Fleet Dashboard → Critical Alert**
+```text
+Fault Injection → FastAPI → Alert Created → SSE Event → Fleet Dashboard → Critical Alert
+```
 
 For example, an injected engine-overheat fault can generate an `ENGINE_OVERHEAT` alert and push it to connected clients.
 
@@ -126,47 +132,37 @@ For example, an injected engine-overheat fault can generate an `ENGINE_OVERHEAT`
 
 FleetGuard is designed to compare a vehicle's recent behavior with historical failure patterns.
 
-**Recent Vehicle Behaviour → 32-Dimensional Fingerprint → pgvector → Similar Historical Failures**
+```text
+Recent Vehicle Behaviour → 32-Dimensional Fingerprint → pgvector → Similar Historical Failures
+```
 
 This allows the system to provide context alongside a risk score.
 
-The current prototype contains the fingerprint schema and similarity query, while the seeded fingerprints are placeholder values.
+> The current prototype contains the fingerprint schema and similarity query, while the seeded fingerprints are placeholder values.
 
 ---
 
 ## 🏗️ Architecture
 
-The target architecture consists of:
+### Target Architecture
 
-**Vehicle / Telemetry Simulator**
-
-↓
-
-**Ingestion Gateway**
-
-↓
-
-**Redpanda / Kafka API**
-
-↓
-
-**Stream Processor**
-
-↓
-
-**ClickHouse + Redis**
-
-↓
-
-**ML Service**
-
-↓
-
-**FastAPI Backend**
-
-↓
-
-**React + TypeScript Dashboard**
+```text
+Vehicle / Telemetry Simulator
+            ↓
+     Ingestion Gateway
+            ↓
+   Redpanda / Kafka API
+            ↓
+      Stream Processor
+            ↓
+    ClickHouse + Redis
+            ↓
+        ML Service
+            ↓
+     FastAPI Backend
+            ↓
+React + TypeScript Dashboard
+```
 
 The platform also integrates:
 
@@ -180,7 +176,9 @@ The platform also integrates:
 
 The working prototype primarily uses:
 
-**React Web UI → FastAPI → PostgreSQL**
+```text
+React Web UI → FastAPI → PostgreSQL
+```
 
 The larger streaming architecture represents the target production architecture.
 
@@ -188,55 +186,16 @@ The larger streaming architecture represents the target production architecture.
 
 ## 🧱 Technology Stack
 
-### Frontend
-
-- React 18
-- TypeScript
-- Vite
-- Tailwind CSS
-
-### Backend
-
-- Python
-- FastAPI
-- Pydantic
-
-### Data
-
-- PostgreSQL 16
-- pgvector
-- ClickHouse
-- Redis
-- MinIO
-
-### Streaming
-
-- Redpanda
-- Kafka-compatible APIs
-
-### Security
-
-- Keycloak
-- Vault
-- mTLS architecture
-
-### Observability
-
-- Prometheus
-- Grafana
-
-### AI / ML
-
-- LightGBM — planned
-- pgvector
-- LangGraph — planned
-- Current copilot — rule/keyword based
-
-### DevOps
-
-- Docker
-- Docker Compose
-- GitHub Actions
+| Layer | Technologies |
+|---|---|
+| **Frontend** | React 18, TypeScript, Vite, Tailwind CSS |
+| **Backend** | Python, FastAPI, Pydantic |
+| **Data** | PostgreSQL 16, pgvector, ClickHouse, Redis, MinIO |
+| **Streaming** | Redpanda, Kafka-compatible APIs |
+| **Security** | Keycloak, Vault, mTLS architecture |
+| **Observability** | Prometheus, Grafana |
+| **AI / ML** | LightGBM *(planned)*, pgvector, LangGraph *(planned)*, rule/keyword-based copilot *(current)* |
+| **DevOps** | Docker, Docker Compose, GitHub Actions |
 
 ---
 
@@ -322,11 +281,10 @@ FleetGuard was designed with security and privacy in mind.
 
 FleetGuard's target architecture is designed around a 100,000-vehicle fleet.
 
-### Target Scale
-
-**10,000 vehicles → ~10,000 events/sec**
-
-**100,000 vehicles → ~100,000 events/sec**
+| Fleet Size | Target Event Rate |
+|---|---|
+| 10,000 vehicles | ~10,000 events/sec |
+| 100,000 vehicles | ~100,000 events/sec |
 
 The target architecture uses:
 
@@ -336,7 +294,7 @@ The target architecture uses:
 - Redis for latest state
 - PostgreSQL for transactional operations
 
-> These are architecture targets and have not been validated through a 100K events/sec load test.
+> ⚠️ These are architecture targets and have not been validated through a 100K events/sec load test.
 
 ---
 
@@ -366,28 +324,32 @@ Alerts also use unique deduplication keys.
 
 ### Fault → Alert
 
-**Fault Injected → API → Alert Created → SSE → Dashboard → Critical Alert**
+```text
+Fault Injected → API → Alert Created → SSE → Dashboard → Critical Alert
+```
 
 ### Copilot → Work Order
 
-**Fleet Manager Request → Risk Information → Proposed Action → Human Review → Approval → Work Order → Audit Record**
+```text
+Fleet Manager Request → Risk Information → Proposed Action → Human Review → Approval → Work Order → Audit Record
+```
 
 ---
 
 ## 📂 Repository Structure
 
-The repository is organized into:
-
-- `.github/workflows/` — CI/CD workflows
-- `db/` — database configuration and seed scripts
-- `deploy/` — deployment and observability configuration
-- `docs/` — project documentation
-- `services/api-service/` — FastAPI backend
-- `web/` — React frontend
-- `docker-compose.yml` — local infrastructure
-- `Makefile` — project commands
-- `PLAN.md` — architecture and implementation planning
-- `.env.example` — environment configuration template
+| Path | Description |
+|---|---|
+| `.github/workflows/` | CI/CD workflows |
+| `db/` | Database configuration and seed scripts |
+| `deploy/` | Deployment and observability configuration |
+| `docs/` | Project documentation |
+| `services/api-service/` | FastAPI backend |
+| `web/` | React frontend |
+| `docker-compose.yml` | Local infrastructure |
+| `Makefile` | Project commands |
+| `PLAN.md` | Architecture and implementation planning |
+| `.env.example` | Environment configuration template |
 
 ---
 
@@ -402,84 +364,130 @@ Make sure you have the following installed:
 - Docker Compose
 - Make
 
-### Clone Repository
+### 1. Clone the Repository
 
-
+```bash
 git clone https://github.com/lavapit/Step-Hackathon-Motorq.git
 cd Step-Hackathon-Motorq
+```
 
-Configure Environment
+### 2. Configure Environment
+
+```bash
 cp .env.example .env
+```
 
 Update the environment variables if required.
-Start Infrastructure
-make up
 
-Seed Database
+### 3. Start Infrastructure
+
+```bash
+make up
+```
+
+### 4. Seed the Database
+
+```bash
 make seed
+```
 
 This creates the synthetic fleet dataset, including the 100,000-vehicle registry.
-Run Demo
+
+### 5. Run the Demo
+
+```bash
 make demo
+```
 
-🌐 Main Services
-Service	URL
-FleetGuard Web UI	http://localhost:3000
-FastAPI Swagger	http://localhost:8000/docs
-Keycloak	http://localhost:8080
-Grafana	http://localhost:3001
-MinIO	http://localhost:9001
+---
 
+## 🌐 Main Services
 
-👥 User Roles
-Role	Responsibilities
-Fleet Manager	Monitor vehicles, alerts, risk and approve actions
-Analyst	Investigate vehicle telemetry and risk
-Tenant Admin	Manage audit and privacy workflows
-Viewer	Read-only fleet visibility
+| Service | URL |
+|---|---|
+| FleetGuard Web UI | http://localhost:3000 |
+| FastAPI Swagger | http://localhost:8000/docs |
+| Keycloak | http://localhost:8080 |
+| Grafana | http://localhost:3001 |
+| MinIO | http://localhost:9001 |
 
+---
 
-🧪 Implementation Status
-Component	Status
-Fleet Dashboard	✅ Implemented
-100K Vehicle Dataset	✅ Implemented
-PostgreSQL Data Model	✅ Implemented
-Multi-Tenant Schema	✅ Implemented
-Alert Generation	✅ Implemented
-SSE Notifications	✅ Implemented
-Risk Ranking UI	⚠️ Prototype / Seeded Scores
-Vehicle Telemetry	⚠️ Prototype
-Failure Fingerprints	⚠️ Placeholder Data
-Work Orders	✅ API Implemented
-Human Approval	✅ API Workflow
-Audit Workflow	⚠️ Partial
-Driver Erasure	⚠️ PostgreSQL Implementation
-Streaming Pipeline	🔜 Planned
-LightGBM Model	🔜 Planned
-LangGraph Agent	🔜 Planned
-Production Authentication	🔜 Planned
-Load Testing	🔜 Planned
+## 👥 User Roles
 
+| Role | Responsibilities |
+|---|---|
+| Fleet Manager | Monitor vehicles, alerts, risk and approve actions |
+| Analyst | Investigate vehicle telemetry and risk |
+| Tenant Admin | Manage audit and privacy workflows |
+| Viewer | Read-only fleet visibility |
 
-⚠️ Known Limitations
+---
+
+## 🧪 Implementation Status
+
+| Component | Status |
+|---|---|
+| Fleet Dashboard | ✅ Implemented |
+| 100K Vehicle Dataset | ✅ Implemented |
+| PostgreSQL Data Model | ✅ Implemented |
+| Multi-Tenant Schema | ✅ Implemented |
+| Alert Generation | ✅ Implemented |
+| SSE Notifications | ✅ Implemented |
+| Risk Ranking UI | ⚠️ Prototype / Seeded Scores |
+| Vehicle Telemetry | ⚠️ Prototype |
+| Failure Fingerprints | ⚠️ Placeholder Data |
+| Work Orders | ✅ API Implemented |
+| Human Approval | ✅ API Workflow |
+| Audit Workflow | ⚠️ Partial |
+| Driver Erasure | ⚠️ PostgreSQL Implementation |
+| Streaming Pipeline | 🔜 Planned |
+| LightGBM Model | 🔜 Planned |
+| LangGraph Agent | 🔜 Planned |
+| Production Authentication | 🔜 Planned |
+| Load Testing | 🔜 Planned |
+
+---
+
+## ⚠️ Known Limitations
+
 FleetGuard AI is a hackathon prototype.
-Machine Learning
-The LightGBM training pipeline has not yet been implemented.
-Risk scores and model-related values shown in the prototype are seeded demonstration values.
-Streaming
+
+### Machine Learning
+
+- The LightGBM training pipeline has not yet been implemented.
+- Risk scores and model-related values shown in the prototype are seeded demonstration values.
+
+### Streaming
+
 The target production pipeline:
+
+```text
 Vehicle → Gateway → Redpanda → Stream Processor → ClickHouse
+```
+
 is part of the planned architecture and is not yet implemented in the current prototype.
-Copilot
-The current copilot uses a rule/keyword-based implementation.
-A guarded LangGraph + LLM architecture is planned for a future version.
-Performance
-Formal load testing has not yet been performed.
-Therefore, values such as 100K events/sec and <2 second latency are architecture targets rather than measured production benchmarks.
-Security
-Production security controls such as JWT validation, PostgreSQL Row-Level Security and rate limiting are planned for future implementation.
-🛣️ Roadmap
-Phase 1 — Prototype
+
+### Copilot
+
+- The current copilot uses a rule/keyword-based implementation.
+- A guarded LangGraph + LLM architecture is planned for a future version.
+
+### Performance
+
+- Formal load testing has not yet been performed.
+- Values such as 100K events/sec and <2 second latency are architecture targets rather than measured production benchmarks.
+
+### Security
+
+- Production security controls such as JWT validation, PostgreSQL Row-Level Security and rate limiting are planned for future implementation.
+
+---
+
+## 🛣️ Roadmap
+
+### Phase 1 — Prototype
+
 - [x] Fleet dashboard
 - [x] 100K synthetic vehicles
 - [x] Multi-tenant database
@@ -490,7 +498,9 @@ Phase 1 — Prototype
 - [x] Human approval workflow
 - [x] Audit workflow
 - [x] Driver erasure workflow
-Phase 2 — Intelligence
+
+### Phase 2 — Intelligence
+
 - [ ] Realistic telemetry simulator
 - [ ] Ingestion gateway
 - [ ] Redpanda streaming pipeline
@@ -500,7 +510,9 @@ Phase 2 — Intelligence
 - [ ] Model evaluation
 - [ ] Replace seeded risk scores
 - [ ] Validate failure fingerprints
-Phase 3 — Production
+
+### Phase 3 — Production
+
 - [ ] JWT authentication
 - [ ] PostgreSQL Row-Level Security
 - [ ] Rate limiting
@@ -513,10 +525,19 @@ Phase 3 — Production
 - [ ] Kubernetes deployment
 - [ ] Helm charts
 - [ ] Terraform
-🏆 Key Innovation
+
+---
+
+## 🏆 Key Innovation
+
 FleetGuard is designed around the complete fleet-maintenance workflow:
+
+```text
 OBSERVE → DETECT → PRIORITIZE → EXPLAIN → RECOMMEND → APPROVE → ACT → AUDIT
+```
+
 The project combines:
+
 - Predictive maintenance
 - Real-time alerting
 - Vehicle intelligence
@@ -526,39 +547,70 @@ The project combines:
 - Auditability
 - Privacy workflows
 - Multi-tenant architecture
-🎥 Demo
-The prototype demonstration covers:
-Time	Feature
-00:00	Fleet overview
-00:24	7-day risk forecast
-00:30	Vehicle telemetry / similar cases
-00:54	Fleet map
-01:06	Copilot
-01:18	Audit & privacy
-01:36	Fault injection
-02:27	End of demonstration
 
+---
+
+## 🎥 Demo
+
+The prototype demonstration covers:
+
+| Time | Feature |
+|---|---|
+| 00:00 | Fleet overview |
+| 00:24 | 7-day risk forecast |
+| 00:30 | Vehicle telemetry / similar cases |
+| 00:54 | Fleet map |
+| 01:06 | Copilot |
+| 01:18 | Audit & privacy |
+| 01:36 | Fault injection |
+| 02:27 | End of demonstration |
 
 The recorded demonstration is approximately 2 minutes 27 seconds.
-🔮 Future Vision
+
+---
+
+## 🔮 Future Vision
+
 The long-term goal is to turn FleetGuard into a continuously operating predictive-maintenance platform.
-Connected Vehicles → Real-Time Telemetry → Streaming Intelligence → Predictive ML → Failure Similarity → Fleet Copilot → Human Approval → Maintenance Execution → Continuous Learning
+
+```text
+Connected Vehicles → Real-Time Telemetry → Streaming Intelligence → Predictive ML
+→ Failure Similarity → Fleet Copilot → Human Approval → Maintenance Execution → Continuous Learning
+```
+
 The goal is to move from:
-"This vehicle is at risk."
+
+> "This vehicle is at risk."
 
 to:
-"This vehicle shows a combination of thermal, electrical and fault-code patterns similar to vehicles that previously failed. Review this vehicle before the predicted failure window."
 
-📚 Documentation
+> "This vehicle shows a combination of thermal, electrical and fault-code patterns similar to vehicles that previously failed. Review this vehicle before the predicted failure window."
+
+---
+
+## 📚 Documentation
+
 Additional project documentation can be found in:
-- docs/AI_USAGE
-- docs/KNOWN_LIMITATIONS
-- docs/OPEN_QUESTIONS
-- PLAN.md
-⚖️ Disclaimer
+
+- `docs/AI_USAGE`
+- `docs/KNOWN_LIMITATIONS`
+- `docs/OPEN_QUESTIONS`
+- `PLAN.md`
+
+---
+
+## ⚖️ Disclaimer
+
 FleetGuard AI is a hackathon prototype and academic project.
+
 All vehicle, driver and telemetry data used in the prototype is synthetic.
+
 Production-scale streaming, trained ML prediction, complete security enforcement and performance benchmarking are future implementation goals.
-🔗 Repository
- 
-FleetGuard AI — Connected Vehicle Intelligence Hackathon
+
+---
+
+## 🔗 Repository
+
+[github.com/lavapit/Step-Hackathon-Motorq](https://github.com/lavapit/Step-Hackathon-Motorq)
+
+**FleetGuard AI — Connected Vehicle Intelligence Hackathon**
