@@ -1,0 +1,42 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 1,
+  "links": [],
+  "liveNow": true,
+  "panels": [
+    {
+      "title": "Ingest Rate (Events/sec)",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "targets": [{"expr": "rate(gw_events_accepted_total[10s])", "legendFormat": "Accepted"}]
+    },
+    {
+      "title": "Stream Processor Latency (p95)",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "targets": [{"expr": "sp_e2e_latency_seconds{quantile=\"0.95\"}", "legendFormat": "p95 Latency"}]
+    },
+    {
+      "title": "Active Alerts by Rule",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "targets": [{"expr": "sum by (rule) (rate(sp_alerts_total[1m]))", "legendFormat": "{{rule}}"}]
+    },
+    {
+      "title": "Kafka Consumer Lag",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "targets": [{"expr": "sp_partition_lag", "legendFormat": "Partition {{partition}}"}]
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["fleetguard"],
+  "time": {"from": "now-15m", "to": "now"},
+  "title": "FleetGuard Pipeline & Telemetry Dashboard",
+  "version": 1
+}

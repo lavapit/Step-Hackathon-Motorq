@@ -1,0 +1,22 @@
+title = "FleetGuard AI Gitleaks Config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Allowlist test and example mock keys"
+paths = [
+  '''\.env\.example''',
+  '''deploy/compose/.*''',
+  '''tests/.*''',
+]
+regexes = [
+  '''mock-key''',
+  '''fleetguard_secret_pass''',
+  '''postgres_admin_pass''',
+  '''clickhouse_secret_pass''',
+  '''redis_secret_pass''',
+  '''minio_secret_pass''',
+  '''admin_secret_pass''',
+  '''vault-root-token-fleetguard''',
+]

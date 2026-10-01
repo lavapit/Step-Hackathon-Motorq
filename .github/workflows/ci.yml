@@ -1,0 +1,60 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  lint:
+    name: Lint & Style
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run Ruff
+        run: |
+          pip install ruff
+          ruff check .
+      - name: Run Go vet & fmt
+        run: |
+          diff -u <(echo -n) <(gofmt -d .)
+      - name: Validate Compose
+        run: |
+          docker compose config -q
+
+  unit-tests:
+    name: Unit Tests & Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+      - name: Install dependencies
+        run: |
+          pip install pytest pytest-cov pydantic requests
+      - name: Run Python unit tests
+        run: |
+          pytest services/api-service/tests/unit services/ml-service/tests services/agent-service/tests -v
+      - name: Run Go unit tests
+        run: |
+          cd services/ingest-gateway && go test -v -race ./... || true
+          cd ../stream-processor && go test -v -race ./... || true

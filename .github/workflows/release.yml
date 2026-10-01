@@ -1,0 +1,19 @@
+name: Release Pipeline
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    name: Build & Package Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build evidence bundle
+        run: tar -czf fleetguard-evidence.tar.gz docs/evidence/
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: fleetguard-evidence.tar.gz

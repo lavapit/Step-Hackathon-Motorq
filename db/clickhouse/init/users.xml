@@ -1,0 +1,12 @@
+<clickhouse>
+    <users>
+        <fleetguard_app>
+            <password>clickhouse_secret_pass</password>
+            <networks>
+                <ip>::/0</ip>
+            </networks>
+            <profile>default</profile>
+            <quota>default</quota>
+        </fleetguard_app>
+    </users>
+</clickhouse>

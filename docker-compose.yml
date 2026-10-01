@@ -1,0 +1,348 @@
+services:
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:v24.1.2
+    container_name: fleetguard-redpanda
+    profiles: ["core", "apps", "sim", "obs", "lite"]
+    command:
+      - redpanda
+      - start
+      - --overprovisioned
+      - --smp=1
+      - --memory=1G
+      - --reserve-memory=0M
+      - --node-id=0
+      - --check=false
+      - --kafka-addr=PLAINTEXT://0.0.0.0:9092,OUTSIDE://0.0.0.0:19092
+      - --advertise-kafka-addr=PLAINTEXT://redpanda:9092,OUTSIDE://localhost:19092
+    ports:
+      - "19092:19092"
+      - "9644:9644"
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster info || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: fleetguard-postgres
+    profiles: ["core", "apps", "sim", "obs", "lite"]
+    environment:
+      POSTGRES_DB: fleetguard
+      POSTGRES_USER: fleetguard_app
+      POSTGRES_PASSWORD: fleetguard_secret_pass
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fleetguard_app -d fleetguard"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.3-alpine
+    container_name: fleetguard-clickhouse
+    profiles: ["core", "apps", "sim", "obs", "lite"]
+    environment:
+      CLICKHOUSE_DB: fleetguard
+      CLICKHOUSE_USER: fleetguard_app
+      CLICKHOUSE_PASSWORD: clickhouse_secret_pass
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+    volumes:
+      - ./db/clickhouse/init/01_init.sql:/docker-entrypoint-initdb.d/01_init.sql
+      - ./db/clickhouse/init/storage_policy.xml:/etc/clickhouse-server/config.d/storage_policy.xml
+      - ./db/clickhouse/init/users.xml:/etc/clickhouse-server/users.d/users.xml
+    ports:
+      - "8123:8123"
+      - "9004:9000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:8123/ping || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    container_name: fleetguard-redis
+    profiles: ["core", "apps", "sim", "obs", "lite"]
+    command: ["redis-server", "--requirepass", "redis_secret_pass"]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a redis_secret_pass ping | grep PONG || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  minio:
+    image: elestio/minio:latest
+    container_name: fleetguard-minio
+    profiles: ["core", "apps", "sim", "obs", "lite"]
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: minio_admin
+      MINIO_ROOT_PASSWORD: minio_secret_pass
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9000/minio/health/live || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  minio-init:
+    image: elestio/minio:latest
+    container_name: fleetguard-minio-init
+    profiles: ["core", "apps", "sim", "obs", "lite"]
+    depends_on:
+      minio:
+        condition: service_healthy
+    volumes:
+      - minio_data:/data
+    entrypoint: ["/bin/sh", "-c", "mkdir -p /data/telemetry-cold /data/ml-models && tail -f /dev/null"]
+    healthcheck:
+      test: ["CMD-SHELL", "test -d /data/telemetry-cold || exit 1"]
+      interval: 2s
+      timeout: 2s
+      retries: 5
+      start_period: 1s
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.5
+    container_name: fleetguard-keycloak
+    profiles: ["core", "apps", "sim", "obs", "lite"]
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin_secret_pass
+    volumes:
+      - ./deploy/compose/keycloak-realm.json:/opt/keycloak/data/import/keycloak-realm.json:ro
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+      start_period: 20s
+
+  vault:
+    image: hashicorp/vault:1.16
+    container_name: fleetguard-vault
+    profiles: ["core", "apps", "sim", "obs", "lite"]
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: vault-root-token-fleetguard
+      VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
+    cap_add:
+      - IPC_LOCK
+    ports:
+      - "8200:8200"
+    healthcheck:
+      test: ["CMD-SHELL", "VAULT_ADDR=http://127.0.0.1:8200 vault status || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  vault-init:
+    image: hashicorp/vault:1.16
+    container_name: fleetguard-vault-init
+    profiles: ["core", "apps", "sim", "obs", "lite"]
+    depends_on:
+      vault:
+        condition: service_healthy
+    volumes:
+      - ./deploy/compose/vault-init.sh:/vault-init.sh:ro
+    entrypoint: ["/bin/sh", "-c", "/vault-init.sh && tail -f /dev/null"]
+    healthcheck:
+      test: ["CMD-SHELL", "exit 0"]
+      interval: 2s
+      timeout: 2s
+      retries: 5
+      start_period: 1s
+
+  # Observability
+  prometheus:
+    image: prom/prometheus:v2.51.2
+    container_name: fleetguard-prometheus
+    profiles: ["obs", "lite"]
+    volumes:
+      - ./deploy/observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:9090/-/healthy || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: fleetguard-grafana
+    profiles: ["obs", "lite"]
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./deploy/observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./deploy/observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3001:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:3000/api/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Application Microservices
+  ingest-gateway:
+    build:
+      context: .
+      dockerfile: services/ingest-gateway/Dockerfile
+    container_name: fleetguard-gateway
+    profiles: ["apps"]
+    ports:
+      - "8443:8443"
+    environment:
+      PORT: "8443"
+      KAFKA_BROKERS: "redpanda:9092"
+      POSTGRES_DSN: "postgres://fleetguard_app:fleetguard_secret_pass@postgres:5432/fleetguard?sslmode=disable"
+    depends_on:
+      redpanda:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
+  stream-processor:
+    build:
+      context: .
+      dockerfile: services/stream-processor/Dockerfile
+    container_name: fleetguard-stream-processor
+    profiles: ["apps"]
+    environment:
+      KAFKA_BROKERS: "redpanda:9092"
+      REDIS_ADDR: "redis:6379"
+      REDIS_PASSWORD: "redis_secret_pass"
+    depends_on:
+      redpanda:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  api-service:
+    build:
+      context: .
+      dockerfile: services/api-service/Dockerfile
+    container_name: fleetguard-api
+    profiles: ["apps"]
+    ports:
+      - "8000:8000"
+    environment:
+      POSTGRES_HOST: "postgres"
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: "fleetguard"
+      POSTGRES_USER: "fleetguard_app"
+      POSTGRES_PASSWORD: "fleetguard_secret_pass"
+      CLICKHOUSE_HOST: "clickhouse"
+      CLICKHOUSE_PORT: "8123"
+      CLICKHOUSE_USER: "fleetguard_app"
+      CLICKHOUSE_PASSWORD: "clickhouse_secret_pass"
+      REDIS_HOST: "redis"
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: "redis_secret_pass"
+      KAFKA_BROKERS: "redpanda:9092"
+      KEYCLOAK_URL: "http://keycloak:8080"
+      KEYCLOAK_REALM: "fleetguard"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      redpanda:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+
+  ml-service:
+    build:
+      context: .
+      dockerfile: services/ml-service/Dockerfile
+    container_name: fleetguard-ml
+    profiles: ["apps"]
+    environment:
+      CLICKHOUSE_HOST: "clickhouse"
+      CLICKHOUSE_PORT: "8123"
+      CLICKHOUSE_USER: "fleetguard_app"
+      CLICKHOUSE_PASSWORD: "clickhouse_secret_pass"
+      POSTGRES_HOST: "postgres"
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: "fleetguard"
+      POSTGRES_USER: "fleetguard_app"
+      POSTGRES_PASSWORD: "fleetguard_secret_pass"
+      REDIS_HOST: "redis"
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: "redis_secret_pass"
+      MINIO_ENDPOINT: "http://minio:9000"
+      MINIO_ACCESS_KEY: "minio_admin"
+      MINIO_SECRET_KEY: "minio_secret_pass"
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+
+  agent-service:
+    build:
+      context: .
+      dockerfile: services/agent-service/Dockerfile
+    container_name: fleetguard-agent
+    profiles: ["apps"]
+    environment:
+      API_BASE_URL: "http://api-service:8000"
+      LLM_PROVIDER: "mock"
+      LLM_MODEL: "mock-model"
+      LLM_API_KEY: "mock-key"
+    depends_on:
+      api-service:
+        condition: service_started
+
+  web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+    container_name: fleetguard-web
+    profiles: ["apps"]
+    ports:
+      - "3000:3000"
+    depends_on:
+      api-service:
+        condition: service_started
+
+  simulator:
+    build:
+      context: .
+      dockerfile: services/simulator/Dockerfile
+    container_name: fleetguard-simulator
+    profiles: ["sim"]
+    environment:
+      TARGET_GATEWAY: "https://ingest-gateway:8443"
+    depends_on:
+      ingest-gateway:
+        condition: service_started
+
+volumes:
+  minio_data:
